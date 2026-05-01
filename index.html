@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cal's Cup Match Drive</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0A1628;
+    background-image:
+      radial-gradient(ellipse at top, #1A2B47 0%, #0A1628 60%, #050B16 100%);
+    min-height: 100vh;
+    padding: 16px 12px;
+    color: #FFFFFF;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(245, 200, 66, 0.25);
+  }
+
+  .page-title h1 {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #F5C842;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .page-title p {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+  }
+
+  /* === SCOREBOARD HEADER === */
+  .scoreboard {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    height: 70px;
+    margin-bottom: 18px;
+  }
+
+  /* Both banners share identical sizing — only the gradient and clip direction differ */
+  .banner {
+    position: relative;
+    flex: 1;
+    max-width: 250px;
+    display: flex;
+    align-items: center;
+    border: 2px solid #C9C7C0;
+    border-bottom-width: 3px;
+  }
+
+  .banner::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+  }
+
+  .banner-red {
+    background: linear-gradient(135deg, #DC2E31 0%, #8B1518 100%);
+    padding: 0 22px;
+    justify-content: flex-start;
+  }
+
+  .banner-blue {
+    background: linear-gradient(135deg, #2C66C9 0%, #14366E 100%);
+    padding: 0 22px;
+    justify-content: flex-end;
+  }
+
+  .banner-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+
+  .banner-amount {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    color: #FFFFFF;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    line-height: 1;
+  }
+
+  .banner-red .banner-content { text-align: left; }
+  .banner-blue .banner-content { text-align: right; }
+
+  /* === GOLD VS WEDGE === */
+  .vs-wedge {
+    position: relative;
+    width: 100px;
+    margin: 0 -22px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Gold trapezoid frame */
+  .vs-frame {
+    position: relative;
+    width: 100%;
+    height: 86px;
+    background: linear-gradient(180deg, #F5C842 0%, #B88A1A 100%);
+    clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Inner dark panel */
+  .vs-inner {
+    position: absolute;
+    inset: 6px 8px 6px 8px;
+    background: linear-gradient(180deg, #1A2B47 0%, #0A1628 100%);
+    clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .vs-text {
+    font-size: 32px;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+    position: relative;
+  }
+
+  /* === METERS SECTION === */
+  .meters-section {
+    background: #FFFFFF;
+    background-image:
+      radial-gradient(circle at 8px 8px, rgba(0, 0, 0, 0.04) 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
+    border-radius: 14px;
+    padding: 18px 16px 14px;
+    border: 2px solid #C9C7C0;
+    margin-bottom: 14px;
+    color: #2A2A2A;
+    position: relative;
+  }
+
+  .meters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .meter-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .meter-team-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding: 4px 14px;
+    border-radius: 4px;
+    color: #FFFFFF;
+  }
+
+  .meter-card.red .meter-team-label {
+    background: linear-gradient(135deg, #DC2E31 0%, #8B1518 100%);
+  }
+
+  .meter-card.blue .meter-team-label {
+    background: linear-gradient(135deg, #2C66C9 0%, #14366E 100%);
+  }
+
+  .meter-shell {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #2A2A2A;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .meter-card.red .meter-shell {
+    background: rgba(220, 46, 49, 0.12);
+  }
+
+  .meter-card.blue .meter-shell {
+    background: rgba(44, 102, 201, 0.12);
+  }
+
+  .meter-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 6px 6px, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  .fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    transition: height 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+  }
+
+  .meter-card.red .fill {
+    background: linear-gradient(180deg, #FF3B3E 0%, #C81E21 100%);
+  }
+
+  .meter-card.blue .fill {
+    background: linear-gradient(180deg, #3D7DE8 0%, #1A4FAF 100%);
+  }
+
+  /* $100 minimum dashed line */
+  .floor-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px dashed #2A2A2A;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .floor-label {
+    position: absolute;
+    right: 8px;
+    background: #2A2A2A;
+    color: #F5C842;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    transform: translateY(50%);
+    z-index: 4;
+  }
+
+  .meter-status {
+    font-size: 11px;
+    font-weight: 700;
+    color: #545859;
+    letter-spacing: 0.8px;
+    margin-top: 12px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* === ROUND DATES STRIP === */
+  .rounds {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .round {
+    background: linear-gradient(180deg, #1A2B47 0%, #0A1628 100%);
+    border: 2px solid #C9C7C0;
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    text-align: center;
+    position: relative;
+  }
+
+  .round::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(245, 200, 66, 0.3);
+    border-radius: 7px;
+    pointer-events: none;
+  }
+
+  .round-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #F5C842;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .match-days {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .match-day-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr;
+    gap: 8px;
+    padding: 0 10px 4px;
+    border-bottom: 1px solid rgba(245, 200, 66, 0.3);
+    margin-bottom: 4px;
+  }
+
+  .match-day-header span {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .mdh-day { color: #C9C7C0 !important; text-align: left !important; }
+  .mdh-red { color: #FF6B6E !important; }
+  .mdh-blue { color: #6DA1E8 !important; }
+
+  .match-day {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 7px 10px;
+    transition: all 0.3s ease;
+  }
+
+  .match-day.is-today {
+    background: rgba(245, 200, 66, 0.18);
+    border: 2px solid #F5C842;
+    box-shadow: 0 0 14px rgba(245, 200, 66, 0.35);
+    padding: 6px 9px;
+  }
+
+  .match-day-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #C9C7C0;
+    text-align: left;
+  }
+
+  .match-day.is-today .match-day-label {
+    color: #F5C842;
+  }
+
+  /* Countdown badge inside the upcoming match-day row */
+  .match-day-countdown {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(245, 200, 66, 0.3);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #F5C842;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .match-day.is-locking-soon {
+    background: rgba(245, 200, 66, 0.1);
+    border: 1px solid rgba(245, 200, 66, 0.4);
+  }
+
+  .match-amt {
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    border-radius: 4px;
+    padding: 3px 6px;
+  }
+
+  .match-amt-red {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #DC2E31 0%, #8B1518 100%);
+  }
+
+  .match-amt-blue {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #2C66C9 0%, #14366E 100%);
+  }
+
+  /* Rule callout — only renders on match days */
+  .rule-callout {
+    background: linear-gradient(180deg, #1A2B47 0%, #0A1628 100%);
+    border: 2px solid #F5C842;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+  }
+
+  .rule-callout::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(245, 200, 66, 0.3);
+    border-radius: 7px;
+    pointer-events: none;
+  }
+
+  .rule-callout-tag {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #0A1628;
+    text-transform: uppercase;
+    background: #F5C842;
+    padding: 5px 10px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .rule-callout-text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.4;
+  }
+
+  .rule-callout-text .team-name {
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    padding: 2px 9px;
+    border-radius: 3px;
+    color: #FFFFFF;
+  }
+
+  .rule-callout-text .team-name.red {
+    background: linear-gradient(135deg, #DC2E31 0%, #8B1518 100%);
+  }
+
+  .rule-callout-text .team-name.blue {
+    background: linear-gradient(135deg, #2C66C9 0%, #14366E 100%);
+  }
+
+  .rule-callout-text .team-name.pending {
+    background: linear-gradient(135deg, #B88A1A 0%, #6B4F0F 100%);
+    color: #F5C842;
+    letter-spacing: 1.5px;
+  }
+
+  .rule-callout.hidden {
+    display: none;
+  }
+
+  .footer {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+  }
+
+  .footer .updated {
+    font-weight: 700;
+    color: #F5C842;
+  }
+
+  .error {
+    text-align: center;
+    padding: 20px;
+    color: #DC2E31;
+    font-size: 12px;
+    background: #FCEBEB;
+    border-radius: 8px;
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 600px) {
+    .scoreboard { height: 70px; }
+    .vs-wedge { width: 90px; margin: 0 -20px; }
+    .vs-frame { height: 80px; }
+    .vs-text { font-size: 22px; }
+    .banner-amount { font-size: 20px; }
+    .banner-label { font-size: 10px; letter-spacing: 1px; }
+    .banner-red { padding: 0 40px 0 18px; }
+    .banner-blue { padding: 0 18px 0 40px; }
+    .meters { grid-template-columns: 1fr; gap: 20px; }
+    .meter-shell { height: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="page-title">
+    <h1>First Tee Donations</h1>
+    <p>Cal's Cup Match Drive 2026</p>
+  </div>
+
+  <!-- SCOREBOARD HEADER -->
+  <div class="scoreboard">
+    <div class="banner banner-red">
+      <div class="banner-content">
+        <div class="banner-label">Red Team</div>
+        <div class="banner-amount" id="redAmount">$0</div>
+      </div>
+    </div>
+
+    <div class="vs-wedge">
+      <div class="vs-frame">
+        <div class="vs-inner">
+          <div class="vs-text">VS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner banner-blue">
+      <div class="banner-content">
+        <div class="banner-label">Blue Team</div>
+        <div class="banner-amount" id="blueAmount">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METERS WITH DIMPLE TEXTURE -->
+  <div class="meters-section">
+    <div class="meters" id="metersContainer"></div>
+  </div>
+
+  <!-- ROUND DATES -->
+  <div class="rule-callout hidden" id="ruleCallout">
+    <div class="rule-callout-tag">Today's<br/>Match</div>
+    <div class="rule-callout-text" id="ruleText"></div>
+  </div>
+
+  <div class="rounds" id="roundsStrip"></div>
+
+  <div class="footer">
+    Last updated: <span class="updated" id="lastUpdated">—</span>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1i96aDPci0DKTRlZcBEccEI9ixhwGTL63I0zPNIiEQyw';
+// Sheet/tab name — the meter reads from the "Totals" tab
+// (Donations log lives on a separate tab in the same workbook)
+const SHEET_NAME = 'Totals';
+const STARTING_CEILING = 250;
+const MINIMUM_FLOOR = 100;
+
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+async function loadData() {
+  if (SHEET_ID === 'PASTE_YOUR_SHEET_ID_HERE' || !SHEET_ID) {
+    renderAll(0, 0, {});
+    document.getElementById('lastUpdated').textContent = 'Sheet not connected yet';
+    return;
+  }
+
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const rows = json.table.rows;
+
+    const matchData = {};
+    let redTotal = 0;
+    let blueTotal = 0;
+
+    rows.forEach(row => {
+      const label = (row.c[0]?.v || '').toString().trim();
+      const red = parseFloat(row.c[1]?.v) || 0;
+      const blue = parseFloat(row.c[2]?.v) || 0;
+      const rule = (row.c[3]?.v || '').toString().trim();
+      if (!label) return;
+
+      if (label.toLowerCase() === 'total') {
+        redTotal = red;
+        blueTotal = blue;
+      } else {
+        matchData[label] = { red, blue, rule };
+      }
+    });
+
+    renderAll(redTotal, blueTotal, matchData);
+
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent =
+      now.toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      });
+
+  } catch (err) {
+    document.getElementById('metersContainer').innerHTML =
+      '<div class="error">Could not load totals. Check the Sheet ID and that the sheet is shared as "Anyone with the link can view".</div>';
+    console.error(err);
+  }
+}
+
+let lastMatchData = {};
+
+function renderAll(red, blue, matchData) {
+  document.getElementById('redAmount').textContent = '$' + red.toLocaleString();
+  document.getElementById('blueAmount').textContent = '$' + blue.toLocaleString();
+  lastMatchData = matchData;
+  renderMeters(red, blue);
+  renderRounds(matchData);
+}
+
+function renderMeters(red, blue) {
+  const container = document.getElementById('metersContainer');
+
+  const SCALE_STEPS = [250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000];
+  const leader = Math.max(red, blue, MINIMUM_FLOOR);
+  let VISUAL_CEILING = STARTING_CEILING;
+  for (const step of SCALE_STEPS) {
+    if (step >= leader * 1.25) { VISUAL_CEILING = step; break; }
+    VISUAL_CEILING = step;
+  }
+
+  const redPct = Math.min(100, (red / VISUAL_CEILING) * 100);
+  const bluePct = Math.min(100, (blue / VISUAL_CEILING) * 100);
+  const floorPct = (MINIMUM_FLOOR / VISUAL_CEILING) * 100;
+
+  const redStatus = red >= MINIMUM_FLOOR
+    ? `Above $${MINIMUM_FLOOR} minimum`
+    : `$${MINIMUM_FLOOR - red} from minimum`;
+  const blueStatus = blue >= MINIMUM_FLOOR
+    ? `Above $${MINIMUM_FLOOR} minimum`
+    : `$${MINIMUM_FLOOR - blue} from minimum`;
+
+  container.innerHTML = `
+    <div class="meter-card red">
+      <div class="meter-team-label">Red Team</div>
+      <div class="meter-shell">
+        <div class="fill" id="fillRed"></div>
+        <div class="floor-line" style="bottom: ${floorPct}%;"></div>
+        <div class="floor-label" style="bottom: ${floorPct}%;">MIN $${MINIMUM_FLOOR}</div>
+      </div>
+      <div class="meter-status">${redStatus}</div>
+    </div>
+
+    <div class="meter-card blue">
+      <div class="meter-team-label">Blue Team</div>
+      <div class="meter-shell">
+        <div class="fill" id="fillBlue"></div>
+        <div class="floor-line" style="bottom: ${floorPct}%;"></div>
+        <div class="floor-label" style="bottom: ${floorPct}%;">MIN $${MINIMUM_FLOOR}</div>
+      </div>
+      <div class="meter-status">${blueStatus}</div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    document.getElementById('fillRed').style.height = redPct + '%';
+    document.getElementById('fillBlue').style.height = bluePct + '%';
+  }, 100);
+}
+
+function renderRounds(matchData) {
+  matchData = matchData || {};
+
+  const rounds = [
+    { label: 'Round 1', days: [{ key: 'May 5' }, { key: 'May 6' }] },
+    { label: 'Round 2', days: [{ key: 'May 13' }, { key: 'May 14' }] }
+  ];
+
+  // Match day metadata with cutoffs
+  const matchDayMeta = {
+    'May 5':  { date: new Date(2026, 4, 5),  cutoff: new Date(2026, 4, 4, 17, 0) },
+    'May 6':  { date: new Date(2026, 4, 6),  cutoff: new Date(2026, 4, 5, 17, 0) },
+    'May 13': { date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 17, 0) },
+    'May 14': { date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 17, 0) }
+  };
+
+  const today = new Date();
+  const monthShort = today.toLocaleString('en-US', { month: 'short' });
+  const todayKey = `${monthShort} ${today.getDate()}`;
+  const matchDayKeys = ['May 5', 'May 6', 'May 13', 'May 14'];
+  const isMatchDay = matchDayKeys.includes(todayKey);
+
+  // Find the next upcoming match day where cutoff hasn't passed yet
+  const now = new Date();
+  let nextUpcomingKey = null;
+  for (const k of matchDayKeys) {
+    if (matchDayMeta[k].cutoff > now) { nextUpcomingKey = k; break; }
+  }
+
+  // Format countdown text
+  function countdownText(cutoff) {
+    const diffMs = cutoff - now;
+    if (diffMs <= 0) return null;
+    const totalMin = Math.floor(diffMs / 60000);
+    const days = Math.floor(totalMin / 1440);
+    const hours = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    if (days >= 1) return `Locks in ${days}d ${hours}h`;
+    if (hours >= 1) return `Locks in ${hours}h ${mins}m`;
+    return `Locks in ${mins}m`;
+  }
+
+  // Determine if cutoff is "soon" (within 24 hours)
+  function isLockingSoon(cutoff) {
+    const diffMs = cutoff - now;
+    return diffMs > 0 && diffMs < 24 * 60 * 60 * 1000;
+  }
+
+  const html = rounds.map(r => {
+    const matchRows = r.days.map(d => {
+      const data = matchData[d.key] || { red: 0, blue: 0 };
+      const meta = matchDayMeta[d.key];
+      const isToday = (d.key === todayKey);
+      const isUpcoming = (d.key === nextUpcomingKey);
+      const cutdown = isUpcoming ? countdownText(meta.cutoff) : null;
+      const lockingSoonClass = (isUpcoming && isLockingSoon(meta.cutoff)) ? ' is-locking-soon' : '';
+      const todayClass = isToday ? ' is-today' : '';
+
+      const countdownHTML = cutdown
+        ? `<div class="match-day-countdown">${cutdown}</div>`
+        : '';
+
+      return `
+        <div class="match-day${todayClass}${lockingSoonClass}">
+          <span class="match-day-label">${d.key}</span>
+          <span class="match-amt match-amt-red">$${data.red.toLocaleString()}</span>
+          <span class="match-amt match-amt-blue">$${data.blue.toLocaleString()}</span>
+          ${countdownHTML}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="round">
+        <div class="round-label">${r.label}</div>
+        <div class="match-day-header">
+          <span class="mdh-day">Date</span>
+          <span class="mdh-red">Red</span>
+          <span class="mdh-blue">Blue</span>
+        </div>
+        <div class="match-days">${matchRows}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('roundsStrip').innerHTML = html;
+
+  // === Time-aware rule callout ===
+  const callout = document.getElementById('ruleCallout');
+  const ruleText = document.getElementById('ruleText');
+  const ruleTag = callout.querySelector('.rule-callout-tag');
+
+  const matchDayInfo = [
+    { key: 'May 5',  date: new Date(2026, 4, 5),  cutoff: new Date(2026, 4, 4, 17, 0) },
+    { key: 'May 6',  date: new Date(2026, 4, 6),  cutoff: new Date(2026, 4, 5, 17, 0) },
+    { key: 'May 13', date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 17, 0) },
+    { key: 'May 14', date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 17, 0) }
+  ];
+
+  const nowTs = new Date();
+
+  // Find the active match day:
+  // - If today IS a match day AND it's before 2 PM → today's match
+  // - If today IS a match day AND it's 2 PM or later → flip to NEXT match day (PENDING)
+  // - If today is NOT a match day → next upcoming match day
+  let activeMatch = null;
+  for (const m of matchDayInfo) {
+    const matchDayStart = new Date(m.date.getFullYear(), m.date.getMonth(), m.date.getDate());
+    const matchDay2pm = new Date(matchDayStart); matchDay2pm.setHours(14, 0, 0, 0);
+    const matchDayEnd = new Date(matchDayStart); matchDayEnd.setDate(matchDayEnd.getDate() + 1);
+
+    // Currently inside this match day BEFORE 2 PM → this is the active match
+    if (nowTs >= matchDayStart && nowTs < matchDay2pm) { activeMatch = m; break; }
+    // Currently before this match day → this is upcoming
+    if (nowTs < matchDayStart) { activeMatch = m; break; }
+    // Currently inside this match day AFTER 2 PM → fall through to next match day
+  }
+
+  if (!activeMatch) {
+    callout.classList.add('hidden');
+    return;
+  }
+
+  // Determine label based on calendar date relationship:
+  // - Today is the match date → "Today's Match"
+  // - Today is the day before the match (calendar day, not 24-hour window) → "Tomorrow's Match"
+  // - Otherwise → show the actual date (e.g., "May 5")
+  const matchDayStart = new Date(activeMatch.date.getFullYear(), activeMatch.date.getMonth(), activeMatch.date.getDate());
+  const startOfTodayLocal = new Date(nowTs.getFullYear(), nowTs.getMonth(), nowTs.getDate());
+  const dayDiffMs = matchDayStart - startOfTodayLocal;
+  const dayDiff = Math.round(dayDiffMs / (1000 * 60 * 60 * 24));
+
+  let labelHTML;
+  if (dayDiff === 0) {
+    labelHTML = "Today's<br/>Match";
+  } else if (dayDiff === 1) {
+    labelHTML = "Tomorrow's<br/>Match";
+  } else {
+    labelHTML = activeMatch.key;
+  }
+
+  ruleTag.innerHTML = labelHTML;
+
+  // Cutoff status drives team display
+  const data = matchData[activeMatch.key];
+  const ruleSentence = (data && data.rule) ? data.rule : 'plays Hole 7 with their non-dominant hand';
+  const isLocked = nowTs >= activeMatch.cutoff;
+
+  let teamHtml;
+  if (!isLocked || !data) {
+    teamHtml = `<span class="team-name pending">PENDING</span>`;
+  } else if (data.red < data.blue) {
+    teamHtml = `<span class="team-name red">Red Team</span>`;
+  } else if (data.blue < data.red) {
+    teamHtml = `<span class="team-name blue">Blue Team</span>`;
+  } else {
+    teamHtml = `<span class="team-name pending">TIED</span>`;
+  }
+
+  ruleText.innerHTML = `${teamHtml} ${ruleSentence}`;
+  callout.classList.remove('hidden');
+}
+
+loadData();
+setInterval(loadData, 60000);
+// Re-render rounds every minute so countdown stays current
+setInterval(() => renderRounds(lastMatchData), 60000);
+</script>
+
+</body>
+</html>
