@@ -286,6 +286,23 @@
     gap: 14px;
   }
 
+  /* Final round — centered below the other two cards */
+  .final-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  .final-wrap .round {
+    width: calc(50% - 7px);
+    max-width: 360px;
+  }
+
+  /* Optional Finals accent — gold border to set it apart slightly */
+  .final-wrap .round {
+    border-color: #F5C842;
+  }
+
   .round {
     background: linear-gradient(180deg, #1A2B47 0%, #0A1628 100%);
     border: 2px solid #C9C7C0;
@@ -563,6 +580,8 @@
 
   <div class="rounds" id="roundsStrip"></div>
 
+  <div class="final-wrap" id="finalWrap"></div>
+
   <div class="footer">
     Last updated: <span class="updated" id="lastUpdated">—</span>
   </div>
@@ -694,18 +713,23 @@ function renderRounds(matchData) {
     { label: 'Round 2', days: [{ key: 'May 13' }, { key: 'May 14' }] }
   ];
 
+  // Final round shown separately, centered below
+  const finalRound = { label: 'Final', days: [{ key: 'May 21' }] };
+
   // Match day metadata with cutoffs
+  // Note: May 21 (Finals) cutoff is Thu May 21 at 12:00 PM noon (others are 5 PM the day before)
   const matchDayMeta = {
     'May 5':  { date: new Date(2026, 4, 5),  cutoff: new Date(2026, 4, 4, 17, 0) },
     'May 6':  { date: new Date(2026, 4, 6),  cutoff: new Date(2026, 4, 5, 17, 0) },
-    'May 13': { date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 18, 0) },
-    'May 14': { date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 18, 0) }
+    'May 13': { date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 17, 0) },
+    'May 14': { date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 17, 0) },
+    'May 21': { date: new Date(2026, 4, 21), cutoff: new Date(2026, 4, 21, 12, 0) }
   };
 
   const today = new Date();
   const monthShort = today.toLocaleString('en-US', { month: 'short' });
   const todayKey = `${monthShort} ${today.getDate()}`;
-  const matchDayKeys = ['May 5', 'May 6', 'May 13', 'May 14'];
+  const matchDayKeys = ['May 5', 'May 6', 'May 13', 'May 14', 'May 21'];
   const isMatchDay = matchDayKeys.includes(todayKey);
 
   // Find the next upcoming match day where cutoff hasn't passed yet
@@ -734,7 +758,8 @@ function renderRounds(matchData) {
     return diffMs > 0 && diffMs < 24 * 60 * 60 * 1000;
   }
 
-  const html = rounds.map(r => {
+  // Build a single round/finals card. Used for Round 1, Round 2, and Final.
+  function renderRoundCard(r) {
     const matchRows = r.days.map(d => {
       const data = matchData[d.key] || { red: 0, blue: 0 };
       const meta = matchDayMeta[d.key];
@@ -769,9 +794,12 @@ function renderRounds(matchData) {
         <div class="match-days">${matchRows}</div>
       </div>
     `;
-  }).join('');
+  }
+
+  const html = rounds.map(renderRoundCard).join('');
 
   document.getElementById('roundsStrip').innerHTML = html;
+  document.getElementById('finalWrap').innerHTML = renderRoundCard(finalRound);
 
   // === Time-aware rule callout ===
   const callout = document.getElementById('ruleCallout');
@@ -781,8 +809,9 @@ function renderRounds(matchData) {
   const matchDayInfo = [
     { key: 'May 5',  date: new Date(2026, 4, 5),  cutoff: new Date(2026, 4, 4, 17, 0) },
     { key: 'May 6',  date: new Date(2026, 4, 6),  cutoff: new Date(2026, 4, 5, 17, 0) },
-    { key: 'May 13', date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 18, 0) },
-    { key: 'May 14', date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 18, 0) }
+    { key: 'May 13', date: new Date(2026, 4, 13), cutoff: new Date(2026, 4, 12, 17, 0) },
+    { key: 'May 14', date: new Date(2026, 4, 14), cutoff: new Date(2026, 4, 13, 17, 0) },
+    { key: 'May 21', date: new Date(2026, 4, 21), cutoff: new Date(2026, 4, 21, 12, 0) }
   ];
 
   const nowTs = new Date();
@@ -829,20 +858,29 @@ function renderRounds(matchData) {
 
   ruleTag.innerHTML = labelHTML;
 
-  // Cutoff status drives team display
+  // Cutoff status drives team display.
+  // Normal matches: team with LESS gets named (penalty rule).
+  // FINAL (May 21): team with MORE gets named (advantage rule — closer tee-off).
   const data = matchData[activeMatch.key];
   const ruleSentence = (data && data.rule) ? data.rule : 'plays Hole 7 with their non-dominant hand';
   const isLocked = nowTs >= activeMatch.cutoff;
+  const isFinal = activeMatch.key === 'May 21';
 
   let teamHtml;
   if (!isLocked || !data) {
     teamHtml = `<span class="team-name pending">PENDING</span>`;
-  } else if (data.red < data.blue) {
-    teamHtml = `<span class="team-name red">Red Team</span>`;
-  } else if (data.blue < data.red) {
-    teamHtml = `<span class="team-name blue">Blue Team</span>`;
-  } else {
+  } else if (data.red === data.blue) {
     teamHtml = `<span class="team-name pending">TIED</span>`;
+  } else if (isFinal) {
+    // Finals: name the WINNER (more donations)
+    const winner = data.red > data.blue ? 'red' : 'blue';
+    const teamLabel = winner === 'red' ? 'Red Team' : 'Blue Team';
+    teamHtml = `<span class="team-name ${winner}">${teamLabel}</span>`;
+  } else {
+    // Normal matches: name the LOSER (less donations) — they get the penalty
+    const loser = data.red < data.blue ? 'red' : 'blue';
+    const teamLabel = loser === 'red' ? 'Red Team' : 'Blue Team';
+    teamHtml = `<span class="team-name ${loser}">${teamLabel}</span>`;
   }
 
   ruleText.innerHTML = `${teamHtml} ${ruleSentence}`;
